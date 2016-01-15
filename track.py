@@ -4,6 +4,7 @@ import argparse
 from collections import OrderedDict
 from datetime import datetime
 import os
+import subprocess
 import sys
 
 from bs4 import BeautifulSoup
@@ -16,16 +17,21 @@ def main():
     parser = argparse.ArgumentParser()
     exclusive_args = parser.add_mutually_exclusive_group()
     exclusive_args.add_argument('-l', action='store_true',
-                                help="list packages in config")
+                                help="list packages in config, looks for \
+                                        $HOME/.config/track/config.yaml")
     exclusive_args.add_argument('-p', metavar="PACKAGE_NAME", 
                                 action="store",
                                 help='package to track')
+    exclusive_args.add_argument('-e', action='store_true',
+                                help='edit config file with $EDITOR or vi')
     args = parser.parse_args()
 
     if args.l:
         list_packages()
     if args.p:
         track_package(args.p)
+    if args.e:
+        edit_config()
     if len(sys.argv)==1:
         parser.print_help()
         sys.exit(1)
@@ -136,6 +142,12 @@ def track_package(package_name):
     except:
         print("Tracking information not found")
 
+
+def edit_config():
+    try:
+        subprocess.run([os.environ['EDITOR'], CONFIG_PATH])
+    except:
+        subprocess.run(["vi", CONFIG_PATH])
 
 if __name__ == "__main__":
     main()
