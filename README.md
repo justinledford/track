@@ -20,6 +20,7 @@ Currently supports USPS tracking numbers.
 
 
 #### Dependencies
+Python 3.5
 beautifulsoup4  
 requests  
 PyYAML  
