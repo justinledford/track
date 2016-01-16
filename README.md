@@ -9,8 +9,10 @@ Currently supports USPS tracking numbers.
   
     optional arguments:
       -h, --help       show this help message and exit
-      -l               list packages in config
+      -l               list packages in config, looks for
+                       $HOME/.config/track/config.yaml
       -p PACKAGE_NAME  package to track
+      -e               edit config file with $EDITOR or vi
 
 #### Configuration Example
     USPS:
