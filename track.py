@@ -23,7 +23,7 @@ def main():
     exclusive_args.add_argument('-l', action='store_true',
                                 help="list packages in config, looks for \
                                         $HOME/.config/track/config.yaml")
-    exclusive_args.add_argument('-p', metavar="PACKAGE_NAME", 
+    exclusive_args.add_argument('-p', metavar="PACKAGE_NAME",
                                 action="store",
                                 help='package to track')
     exclusive_args.add_argument('-e', action='store_true',
@@ -36,14 +36,14 @@ def main():
         track_package(args.p)
     if args.e:
         edit_config()
-    if len(sys.argv)==1:
+    if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
 
 
 # Remove whitespace in USPS strings
 def remove_whitespace(s):
-    return s.replace('\r', '').replace('\t','').replace('\n','')
+    return s.replace('\r', '').replace('\t', '').replace('\n', '')
 
 
 # Fix USPS datetime formatting
@@ -60,15 +60,15 @@ def fix_usps_datetime(date_time):
 def get_usps_data(tracking_number):
     url = "https://tools.usps.com/go/TrackConfirmAction?qtc_tLabels1="\
             + tracking_number
-    headers = {'user-agent': USER_AGENT} 
+    headers = {'user-agent': USER_AGENT}
     r = requests.get(url, headers=headers)
-    
+
     html = r.text
 
     # There is a missing </p> tag in the first "status"
     # <td>, causing BeautifulSoup to ignore the parent
     # <td>, removing all <p> and </p> tags fixes this issue
-    html = html.replace('<p>','').replace('</p>','')
+    html = html.replace('<p>', '').replace('</p>', '')
 
     soup = BeautifulSoup(html, 'html.parser')
     table_rows = soup.find_all("tr", class_="detail-wrapper")
@@ -83,11 +83,10 @@ def get_usps_data(tracking_number):
         date_time = fix_usps_datetime(date_time)
         try:
             timestamp = datetime.strptime(date_time,
-                    "%B %d, %Y, %I:%M %p").timestamp()
+                                          "%B %d, %Y, %I:%M %p").timestamp()
         except:
             timestamp = datetime.strptime(date_time,
-                    "%B %d, %Y").timestamp()
-
+                                          "%B %d, %Y").timestamp()
 
         status_td = tr.find("td", class_="status")
         status_p = status_td.find("p")
@@ -95,6 +94,7 @@ def get_usps_data(tracking_number):
         # Some status strings are in an additional span child
         if "clearfix" in status_p["class"]:
             status_span = status_p.find("span")
+
             status = remove_whitespace(status_span.string.lstrip())
         else:
             # There is an <input> along with text in
@@ -161,7 +161,7 @@ def get_ups_data(tracking_number):
 
         time = tr.select("td:nth-of-type(3)")[0]
         # AM/PM need no periods for strptime
-        time = remove_whitespace(time.string).strip().replace('.','')
+        time = remove_whitespace(time.string).strip().replace('.', '')
 
         status = tr.select("td:nth-of-type(4)")[0]
         status = remove_whitespace(status.string)
@@ -170,13 +170,12 @@ def get_ups_data(tracking_number):
         # Get timestamp for sorting
         date_time = "{} {}".format(date, time)
         timestamp = datetime.strptime(date_time,
-                "%m/%d/%Y %I:%M %p").timestamp()
+                                      "%m/%d/%Y %I:%M %p").timestamp()
 
         data[timestamp] = {}
         data[timestamp]["date_time"] = date_time
         data[timestamp]["status"] = status
         data[timestamp]["location"] = location
-
 
     return OrderedDict(sorted(data.items()))
 
