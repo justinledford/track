@@ -27,7 +27,7 @@ PyYAML
 
 #### To-do:
 
-Support for additional carriers such as DHL, Dynamex, etc.
+Support for additional carriers such as DHL, Dynamex, etc.  
 Option to list only most recent statuses for each package.  
 
 
