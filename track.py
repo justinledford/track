@@ -3,6 +3,7 @@
 import argparse
 from collections import OrderedDict
 from datetime import datetime
+import json
 import os
 import subprocess
 import sys
@@ -12,9 +13,8 @@ import requests
 import yaml
 
 CONFIG_PATH = "{}/.config/track/config.yaml".format(os.environ['HOME'])
-USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) \
-                  AppleWebKit/537.36 (KHTML, like Gecko) \
-                  Chrome/34.0.1847.131 Safari/537.36'
+USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64; rv:47.0) Gecko/20100101' \
+              + 'Firefox/47.0'
 
 
 def main():
@@ -44,7 +44,6 @@ def main():
 # Remove whitespace in USPS strings
 def remove_whitespace(s):
     return s.replace('\r', '').replace('\t', '').replace('\n', '')
-
 
 ##############################
 # USPS Tracking
@@ -115,7 +114,6 @@ def get_usps_data(tracking_number):
         data[timestamp]["location"] = location
 
     return OrderedDict(sorted(data.items()))
-
 
 ##############################
 # UPS Tracking
@@ -190,6 +188,60 @@ def get_ups_data(tracking_number):
     return OrderedDict(sorted(data.items()))
 
 
+##############################
+# Fedex Tracking
+##############################
+
+
+def get_fedex_data(tracking_number):
+    url = "https://www.fedex.com/trackingCal/track"
+    data_params = {"TrackPackagesRequest":
+                   {"appType": "WTRK",
+                    "uniqueKey": "",
+                    "processingParameters": {},
+                    "trackingInfoList": [
+                        {"trackNumberInfo": {
+                            "trackingNumber": tracking_number,
+                            "trackingQualifier": "",
+                            "trackingCarrier": ""
+                        }}
+                    ]}}
+
+    request_data = {"data": json.dumps(data_params),
+                    "action": "trackpackages",
+                    "locale": "en_US",
+                    "version": "1",
+                    "format": "json"}
+
+    r = requests.post(url, data=request_data)
+    fedex_data = json.loads(r.text)
+    events = fedex_data['TrackPackagesResponse']['packageList'][0][
+        'scanEventList']
+
+    data = {}
+
+    for entry in events:
+        location = entry['scanLocation']
+
+        date = entry['date']
+
+        time = entry['time']
+
+        status = entry['status']
+
+        # Get timestamp for sorting
+        date_time = "{} {}".format(date, time)
+        timestamp = datetime.strptime(date_time,
+                                      "%Y-%m-%d %H:%M:%S").timestamp()
+
+        data[timestamp] = {}
+        data[timestamp]["date_time"] = date_time
+        data[timestamp]["status"] = status
+        data[timestamp]["location"] = location
+
+    return OrderedDict(sorted(data.items()))
+
+
 def print_history(history):
     for a, b in history.items():
         print(b['date_time'])
@@ -221,6 +273,8 @@ def track_package(package_name):
             history = get_usps_data(tracking_number)
         if carrier == 'UPS':
             history = get_ups_data(tracking_number)
+        if carrier == 'FedEx':
+            history = get_fedex_data(tracking_number)
         print_history(history)
     except:
         print("Tracking information not found")
@@ -231,6 +285,7 @@ def edit_config():
         subprocess.run([os.environ['EDITOR'], CONFIG_PATH])
     except:
         subprocess.run(["vi", CONFIG_PATH])
+
 
 if __name__ == "__main__":
     main()
