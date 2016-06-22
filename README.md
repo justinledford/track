@@ -1,8 +1,7 @@
 # track
-Command line interface to track shipments
+Command line interface to track USPS and UPS shipments by tracking numbers, utilizing a web scraper to gather data. This was created for personal use, without the need to register for any API.
 
-Currently supports USPS tracking numbers.
-  
+
 #### Usage
 
     usage: track.py [-h] [-l | -p PACKAGE_NAME]
@@ -28,4 +27,7 @@ PyYAML
 
 #### To-do:
 
-Support for tracking UPS and FedEx shipments.
+Support for tracking FedEx shipments.  
+Option to list only most recent statuses for each package.  
+Select package to track by positional number in config file.  
+
