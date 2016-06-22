@@ -46,6 +46,11 @@ def remove_whitespace(s):
     return s.replace('\r', '').replace('\t', '').replace('\n', '')
 
 
+##############################
+# USPS Tracking
+##############################
+
+
 # Fix USPS datetime formatting
 def fix_usps_datetime(date_time):
     s = date_time.split(",")
@@ -110,6 +115,11 @@ def get_usps_data(tracking_number):
         data[timestamp]["location"] = location
 
     return OrderedDict(sorted(data.items()))
+
+
+##############################
+# UPS Tracking
+##############################
 
 
 def get_ups_data(tracking_number):
